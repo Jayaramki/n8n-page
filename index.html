@@ -60,8 +60,8 @@
             "Content-Type": "application/json"
           }});
 
-        const text = await res.text();
-        output.innerText = text;
+        const reportHTML = await res.html;
+        output.innerHTML = reportHTML;
       } catch (err) {
         output.innerText = "Error fetching report: " + err.message;
       }
