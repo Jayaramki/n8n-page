@@ -55,13 +55,14 @@
       </div>
     </form>
 
-    <div id="loading" class="hidden flex justify-center">
-      <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+    <!-- Spinner -->
+    <div id="spinner" class="hidden mt-4 text-blue-600 text-center">
+      <svg class="animate-spin h-6 w-6 mx-auto" viewBox="0 0 24 24">
         <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"></path>
       </svg>
     </div>
-
+        
     <div id="result" class="hidden">
       <h2 class="text-lg font-semibold">Report Output:</h2>
       <div id="output" class="bg-gray-100 dark:bg-gray-700 mt-2 p-4 rounded text-sm font-mono overflow-x-auto"></div>
@@ -75,7 +76,7 @@
     const emailInput = document.getElementById('emailAddresses');
     const output = document.getElementById('output');
     const result = document.getElementById('result');
-    const loading = document.getElementById('loading');
+    const spinner = document.getElementById('spinner');
     const iterationError = document.getElementById('iterationError');
     const emailError = document.getElementById('emailError');
 
@@ -107,7 +108,7 @@
       }
 
       const payload = { responseType: responseTypes, emailAddresses };
-      loading.classList.remove('hidden');
+      spinner.classList.remove('hidden');
 
       try {
         const res = await fetch("https://cjramki.app.n8n.cloud/webhook/75135e98-607e-4da0-8432-3c79ec5c3db9", {
@@ -117,11 +118,11 @@
         });
 
         const data = await res.json();
-        loading.classList.add('hidden');
+        spinner.classList.add('hidden');
         result.classList.remove('hidden');
         output.innerHTML = data.html || data.message || 'No output.';
       } catch (err) {
-        loading.classList.add('hidden');
+        spinner.classList.add('hidden');
         result.classList.remove('hidden');
         output.innerText = "Error: " + err.message;
       }
