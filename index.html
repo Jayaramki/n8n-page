@@ -77,7 +77,7 @@
     const output = document.getElementById('output');
     const result = document.getElementById('result');
     const spinner = document.getElementById('spinner');
-    const iterationError = document.getElementById('iterationError');
+    //const iterationError = document.getElementById('iterationError');
     const emailError = document.getElementById('emailError');
 
     sendEmailCheckbox.addEventListener('change', () => {
@@ -89,10 +89,10 @@
       e.preventDefault();
       result.classList.add('hidden');
       output.innerText = '';
-      iterationError.classList.add('hidden');
+      //iterationError.classList.add('hidden');
       emailError.classList.add('hidden');
 
-      const iterationPath = document.getElementById('iterationPath').value.trim();
+      //const iterationPath = document.getElementById('iterationPath').value.trim();
       const responseTypes = Array.from(document.querySelectorAll('input[name="responseType"]:checked')).map(cb => cb.value);
       const emailAddresses = emailInput.value.trim();
 
