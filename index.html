@@ -1,75 +1,131 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="bg-white text-black dark:bg-gray-900 dark:text-white">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Shiptech Roadmap Project Report Generator</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Shiptech Report Generator</title>
   <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class'
+    }
+  </script>
 </head>
-<body class="bg-gray-100 min-h-screen flex items-center justify-center px-4">
-  <div class="bg-white shadow-xl rounded-2xl p-8 w-full">
-    <h1 class="text-2xl font-bold text-center text-blue-600 mb-6">Shiptech Roadmap Project Report Generator</h1>
-    
-    <form id="reportForm" class="space-y-5 text-center">
-      <!--
+<body class="min-h-screen flex items-center justify-center p-4">
+  <div class="w-full max-w-lg bg-white dark:bg-gray-800 shadow-xl rounded-2xl p-6 space-y-6">
+    <h1 class="text-2xl font-bold text-center text-blue-600 dark:text-blue-400">Shiptech Report Generator</h1>
+
+    <form id="reportForm" class="space-y-4">
       <div>
-        <label for="mode" class="block text-sm font-medium text-gray-700">Report Mode</label>
-        <select name="mode" id="mode" class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500">
-          <option value="sprint">Sprint-wise</option>
-          <option value="roadmap">Roadmap-wise</option>
-        </select>
+        <label for="iterationPath" class="block text-sm font-medium">Iteration Path</label>
+        <input type="text" name="iterationPath" id="iterationPath" required
+          placeholder="e.g., Shiptech/12.10.0/Sprint 1"
+          class="mt-1 w-full rounded-md border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500"/>
+        <p id="iterationError" class="text-red-500 text-xs hidden mt-1">Iteration path is required.</p>
       </div>
 
       <div>
-        <label for="iterationPath" class="block text-sm font-medium text-gray-700">Iteration Path</label>
-        <input type="text" name="iterationPath" id="iterationPath" placeholder="e.g., Shiptech/12.10.0/Sprint 1"
-          class="mt-1 block w-full rounded-md border-gray-300 shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+        <label class="block text-sm font-medium mb-1">Response Type</label>
+        <div class="flex gap-4">
+          <label class="inline-flex items-center">
+            <input type="checkbox" name="responseType" value="display" class="form-checkbox text-blue-600" checked>
+            <span class="ml-2">Display Here</span>
+          </label>
+          <label class="inline-flex items-center">
+            <input type="checkbox" name="responseType" value="email" id="sendEmailCheckbox" class="form-checkbox text-blue-600">
+            <span class="ml-2">Send Email</span>
+          </label>
+        </div>
       </div>
-      -->
 
-      <button type="submit" style
-        class="bg-blue-600 hover:bg-blue-700 text-white  font-semibold py-2 px-4 rounded-lg transition duration-200">
-        Generate Report
-      </button>
+      <div id="emailField" class="hidden">
+        <label for="emailAddresses" class="block text-sm font-medium">Email Addresses</label>
+        <input type="text" name="emailAddresses" id="emailAddresses"
+          placeholder="Comma separated emails"
+          class="mt-1 w-full rounded-md border-gray-300 dark:border-gray-600 bg-gray-50 dark:bg-gray-700 text-gray-900 dark:text-white shadow-sm focus:ring-blue-500 focus:border-blue-500" />
+        <p class="text-xs text-gray-500 mt-1">Use commas to separate multiple emails.</p>
+        <p id="emailError" class="text-red-500 text-xs hidden mt-1">Please enter valid email(s).</p>
+      </div>
+
+      <div>
+        <button type="submit"
+          class="bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg w-full">
+          Generate Report
+        </button>
+      </div>
     </form>
 
-    <div id="result" class="mt-8 hidden">
-      <h2 class="text-lg font-semibold mb-2 text-gray-800">Report Output:</h2>
-      <div id="output" class="bg-gray-50 p-4 rounded-md border border-gray-200 font-mono text-sm"></div>
+    <div id="loading" class="hidden flex justify-center">
+      <svg class="animate-spin h-6 w-6 text-blue-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8v8z"/>
+      </svg>
+    </div>
+
+    <div id="result" class="hidden">
+      <h2 class="text-lg font-semibold">Report Output:</h2>
+      <div id="output" class="bg-gray-100 dark:bg-gray-700 mt-2 p-4 rounded text-sm font-mono overflow-x-auto"></div>
     </div>
   </div>
 
   <script>
-  const form = document.getElementById('reportForm');
-  const resultDiv = document.getElementById('result');
-  const output = document.getElementById('output');
+    const form = document.getElementById('reportForm');
+    const sendEmailCheckbox = document.getElementById('sendEmailCheckbox');
+    const emailField = document.getElementById('emailField');
+    const emailInput = document.getElementById('emailAddresses');
+    const output = document.getElementById('output');
+    const result = document.getElementById('result');
+    const loading = document.getElementById('loading');
+    const iterationError = document.getElementById('iterationError');
+    const emailError = document.getElementById('emailError');
 
-  form.addEventListener('submit', async (e) => {
-    e.preventDefault();
+    sendEmailCheckbox.addEventListener('change', () => {
+      emailField.classList.toggle('hidden', !sendEmailCheckbox.checked);
+      if (!sendEmailCheckbox.checked) emailInput.value = '';
+    });
 
-    output.innerText = "Loading...";
-    resultDiv.classList.remove('hidden');
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      result.classList.add('hidden');
+      output.innerText = '';
+      iterationError.classList.add('hidden');
+      emailError.classList.add('hidden');
 
-    try {
-      const res = await fetch("https://cjramki.app.n8n.cloud/webhook/75135e98-607e-4da0-8432-3c79ec5c3db9", {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json"
-        }
-      });
+      const iterationPath = document.getElementById('iterationPath').value.trim();
+      const responseTypes = Array.from(document.querySelectorAll('input[name="responseType"]:checked')).map(cb => cb.value);
+      const emailAddresses = emailInput.value.trim();
 
-      const data = await res.json();
-
-      // Safely inject the HTML into output div
-      if (data.html) {
-        output.innerHTML = data.html;
-      } else {
-        output.innerText = "No HTML found in response.";
+      if (!iterationPath) {
+        iterationError.classList.remove('hidden');
+        return;
       }
-    } catch (err) {
-      output.innerText = "Error fetching report: " + err.message;
-    }
-  });
-</script>
+
+      if (responseTypes.includes('email') && emailAddresses === '') {
+        emailError.textContent = 'Please enter email address(es).';
+        emailError.classList.remove('hidden');
+        return;
+      }
+
+      const payload = { iterationPath, responseType: responseTypes, emailAddresses };
+      loading.classList.remove('hidden');
+
+      try {
+        const res = await fetch("https://cjramki.app.n8n.cloud/webhook/75135e98-607e-4da0-8432-3c79ec5c3db9", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(payload)
+        });
+
+        const data = await res.json();
+        loading.classList.add('hidden');
+        result.classList.remove('hidden');
+        output.innerHTML = data.html || data.message || 'No output.';
+      } catch (err) {
+        loading.classList.add('hidden');
+        result.classList.remove('hidden');
+        output.innerText = "Error: " + err.message;
+      }
+    });
+  </script>
 </body>
 </html>
